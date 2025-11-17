@@ -1,48 +1,69 @@
 """
-Database Schemas
+Database Schemas for Travel Platform
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model represents a MongoDB collection. The collection name is the lowercase
+of the class name, e.g. Package -> "package".
 """
+from pydantic import BaseModel, Field, EmailStr
+from typing import List, Optional, Literal
 
-from pydantic import BaseModel, Field
-from typing import Optional
 
-# Example schemas (replace with your own):
+class Destination(BaseModel):
+    name: str = Field(..., description="Destination name e.g., Kedarnath")
+    state: str = Field(..., description="Indian state")
+    description: Optional[str] = Field(None, description="Short description")
+    image_url: Optional[str] = Field(None, description="Hero image URL")
+    tags: List[str] = Field(default_factory=list, description="Tags/keywords")
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Package(BaseModel):
+    title: str = Field(..., description="Package title")
+    destination: str = Field(..., description="Destination name")
+    duration_days: int = Field(..., ge=1, description="Number of days")
+    price: float = Field(..., ge=0, description="Base price per person")
+    highlights: List[str] = Field(default_factory=list)
+    inclusions: List[str] = Field(default_factory=list)
+    exclusions: List[str] = Field(default_factory=list)
+    image_url: Optional[str] = None
+    is_featured: bool = Field(default=False)
 
-# Add your own schemas here:
-# --------------------------------------------------
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Hotel(BaseModel):
+    name: str
+    destination: str
+    stars: int = Field(ge=1, le=5)
+    price_per_night: float = Field(ge=0)
+    amenities: List[str] = Field(default_factory=list)
+    image_url: Optional[str] = None
+    contact_phone: Optional[str] = None
+
+
+class TransportOption(BaseModel):
+    type: Literal["car", "bus", "tempo", "helicopter", "train"]
+    origin: str
+    destination: str
+    seats: int = Field(ge=1)
+    price: float = Field(ge=0)
+    operator: Optional[str] = None
+
+
+class Inquiry(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    service_type: Literal["package", "hotel", "transport", "custom"]
+    message: Optional[str] = None
+    package_id: Optional[str] = None
+    travel_dates: Optional[str] = None
+    travelers: Optional[int] = Field(default=1, ge=1)
+
+
+class Newsletter(BaseModel):
+    email: EmailStr
+
+
+class Testimonial(BaseModel):
+    name: str
+    text: str
+    rating: int = Field(ge=1, le=5)
+    location: Optional[str] = None
